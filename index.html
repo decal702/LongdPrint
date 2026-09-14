@@ -136,16 +136,27 @@
     background: var(--pink);
     color: #fff;
   }
-  .mode-switch {
-    display: block;
-    margin: 0 auto 16px;
-    padding: 6px 16px;
+  .mode-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .mode-toggle button {
+    flex: 1;
+    padding: 8px 4px;
     border-radius: 999px;
     border: 1px solid var(--border);
     background: transparent;
     color: var(--text-secondary);
+    font-weight: 600;
     font-size: 0.8rem;
     cursor: pointer;
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+  .mode-toggle button.active {
+    background: var(--pill-bg);
+    color: var(--text);
+    border-color: var(--text-secondary);
   }
   .toggle button,
   .send-btn {
@@ -251,7 +262,11 @@
     <button id="btnHers" onclick="setRecipient('Ts')">To T</button>
   </div>
 
-  <button class="mode-switch" id="modeSwitch" onclick="toggleMode()">To do</button>
+  <div class="mode-toggle" id="modeToggle">
+    <button id="modeMsgBtn" class="active" onclick="setMode('message')">Message</button>
+    <button id="modeTodoBtn" onclick="setMode('todo')">To-do</button>
+    <button id="modePhotoBtn" onclick="setMode('photo')">Photo</button>
+  </div>
 
   <div id="messagePanel">
     <textarea id="messageBox" placeholder="Type your message..." maxlength="500" oninput="updateCount()"></textarea>
@@ -376,24 +391,23 @@
     return recipientValue === "yours" ? "Ts" : "yours";
   }
 
-  const MODES = ["message", "todo", "photo"];
-  const MODE_LABELS = { message: "To do", todo: "Photo", photo: "Message" };
   const MODE_TITLES = { message: "Send a message", todo: "Print a to-do list", photo: "Send a photo" };
   const SEND_LABELS = { message: "Send", todo: "Print list", photo: "Send photo" };
 
-  function toggleMode() {
-    currentMode = MODES[(MODES.indexOf(currentMode) + 1) % MODES.length];
+  function setMode(mode) {
+    currentMode = mode;
     // No SENDER_NAME anymore, so no way to auto-default to "yourself" —
     // just keep whatever recipient was already selected.
 
-    const btn = document.getElementById("modeSwitch");
-    btn.textContent = MODE_LABELS[currentMode];
-    document.documentElement.classList.toggle("todo-mode", currentMode !== "message");
-    document.getElementById("pageTitle").textContent = MODE_TITLES[currentMode];
-    document.getElementById("messagePanel").style.display = currentMode === "message" ? "block" : "none";
-    document.getElementById("todoPanel").style.display = currentMode === "todo" ? "block" : "none";
-    document.getElementById("photoPanel").style.display = currentMode === "photo" ? "block" : "none";
-    document.getElementById("sendBtn").textContent = SEND_LABELS[currentMode];
+    document.getElementById("modeMsgBtn").classList.toggle("active", mode === "message");
+    document.getElementById("modeTodoBtn").classList.toggle("active", mode === "todo");
+    document.getElementById("modePhotoBtn").classList.toggle("active", mode === "photo");
+    document.documentElement.classList.toggle("todo-mode", mode !== "message");
+    document.getElementById("pageTitle").textContent = MODE_TITLES[mode];
+    document.getElementById("messagePanel").style.display = mode === "message" ? "block" : "none";
+    document.getElementById("todoPanel").style.display = mode === "todo" ? "block" : "none";
+    document.getElementById("photoPanel").style.display = mode === "photo" ? "block" : "none";
+    document.getElementById("sendBtn").textContent = SEND_LABELS[mode];
     document.getElementById("status").textContent = "";
   }
 
