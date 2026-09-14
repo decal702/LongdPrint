@@ -1,6 +1,773 @@
 <!DOCTYPE html>
 <html lang="en">
+<head><!DOCTYPE html>
+<html lang="en">
 <head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Send" />
+<link rel="apple-touch-icon" href="icon.png" />
+<title>Send a Message</title>
+<script>
+  // Runs before the page paints, so there's no flash of the wrong theme.
+  // Preference is remembered per-device (localStorage); falls back to
+  // the phone's system dark/light setting if never chosen before.
+  (function () {
+    const saved = localStorage.getItem("theme");
+    const theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+<style>
+  :root {
+    --pink: #e0577a;
+    --bg: #fff7f8;
+    --card-bg: #ffffff;
+    --text: #2b2b2b;
+    --text-secondary: #999;
+    --border: #ddd;
+    --pill-bg: #f7f7f7;
+    --pill-text: #777;
+    --shadow: rgba(0,0,0,0.08);
+  }
+  html[data-theme="dark"] {
+    --pink: #ec6a8c;
+    --bg: #18181b;
+    --card-bg: #242429;
+    --text: #f0f0f0;
+    --text-secondary: #8a8a8f;
+    --border: #3a3a40;
+    --pill-bg: #2e2e34;
+    --pill-text: #b0b0b6;
+    --shadow: rgba(0,0,0,0.35);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+    padding: 16px;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 28px 24px;
+    box-shadow: 0 10px 30px var(--shadow);
+    position: relative;
+    transition: background 0.2s ease;
+  }
+  .theme-toggle {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: var(--pill-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+  }
+  .theme-toggle svg { width: 16px; height: 16px; }
+  .theme-toggle .sun-icon { display: none; }
+  .theme-toggle .moon-icon { display: block; }
+  html[data-theme="dark"] .theme-toggle .sun-icon { display: block; }
+  html[data-theme="dark"] .theme-toggle .moon-icon { display: none; }
+  h1 {
+    font-size: 1.3rem;
+    margin: 0 0 18px;
+    text-align: center;
+  }
+  .device-status {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--pill-text);
+    background: var(--pill-bg);
+    padding: 5px 10px;
+    border-radius: 999px;
+  }
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ccc;
+    flex-shrink: 0;
+  }
+  .status-dot.online { background: #3fb96e; }
+  .status-dot.offline { background: #888; }
+  .toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .toggle button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid var(--pink);
+    background: transparent;
+    color: var(--pink);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .toggle button.active {
+    background: var(--pink);
+    color: #fff;
+  }
+  .mode-switch {
+    display: block;
+    margin: 0 auto 16px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .toggle button,
+  .send-btn {
+    transition: filter 0.5s ease, background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+  html.todo-mode .toggle button.active,
+  html.todo-mode .send-btn {
+    filter: grayscale(1);
+  }
+  .todo-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .todo-input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  .todo-input::placeholder { color: var(--text-secondary); }
+  .todo-remove {
+    width: 36px;
+    border: none;
+    border-radius: 10px;
+    background: var(--pill-bg);
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .add-item-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 4px;
+    border-radius: 10px;
+    border: 1px dashed var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 12px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    background: var(--card-bg);
+    color: var(--text);
+  }
+  textarea::placeholder { color: var(--text-secondary); }
+  .char-count {
+    text-align: right;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  .send-btn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: var(--pink);
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .send-btn:disabled { opacity: 0.6; }
+  .status {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 0.9rem;
+    min-height: 1.2em;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+    <svg class="moon-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 1020.354 15.354z"/></svg>
+  </button>
+
+  <h1 id="pageTitle">Send a message</h1>
+
+  <div class="device-status">
+    <div class="status-pill" id="statusD"><span class="status-dot"></span><span class="status-label">D: checking...</span></div>
+    <div class="status-pill" id="statusT"><span class="status-dot"></span><span class="status-label">T: checking...</span></div>
+  </div>
+
+  <div class="toggle">
+    <button id="btnYours" class="active" onclick="setRecipient('yours')">To D</button>
+    <button id="btnHers" onclick="setRecipient('Ts')">To T</button>
+  </div>
+
+  <button class="mode-switch" id="modeSwitch" onclick="toggleMode()">To do</button>
+
+  <div id="messagePanel">
+    <textarea id="messageBox" placeholder="Type your message..." maxlength="500" oninput="updateCount()"></textarea>
+    <div class="char-count" id="charCount">0 / 500</div>
+  </div>
+
+  <div id="todoPanel" style="display: none;">
+    <div id="todoItems"></div>
+    <button type="button" class="add-item-btn" id="addItemBtn" onclick="addTodoRow()">+ Add item</button>
+  </div>
+
+  <div id="photoPanel" style="display: none;">
+    <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhotoSelected(event)" style="display: none;">
+    <button type="button" class="add-item-btn" id="photoPickBtn" onclick="document.getElementById('photoInput').click()">+ Choose a photo</button>
+    <canvas id="photoPreview" style="display: none; width: 100%; border-radius: 10px; margin-top: 10px; image-rendering: pixelated;"></canvas>
+    <div class="char-count" id="photoStatus"></div>
+  </div>
+
+  <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+  function updateCount() {
+    const len = document.getElementById("messageBox").value.length;
+    const counter = document.getElementById("charCount");
+    counter.textContent = `${len} / 500`;
+    counter.style.color = len > 450 ? "#d67a2c" : "";
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute("data-theme");
+    const next = current === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("theme", next);
+  }
+
+  // ---------------------------------------------------------------
+  // To-do list mode (toggleMode itself lives in the next script block,
+  // since it needs `recipient` and `setRecipient`, defined there)
+  // ---------------------------------------------------------------
+  let currentMode = "message";
+
+  function addTodoRow(value) {
+    const container = document.getElementById("todoItems");
+    if (container.children.length >= 5) return; // matches the firmware's per-cycle batch limit
+    const row = document.createElement("div");
+    row.className = "todo-row";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "todo-input";
+    input.placeholder = "To-do item...";
+    input.maxLength = 200;
+    if (value) input.value = value;
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "todo-remove";
+    removeBtn.textContent = "\u00d7";
+    removeBtn.setAttribute("aria-label", "Remove item");
+    removeBtn.onclick = () => removeTodoRow(removeBtn);
+    row.appendChild(input);
+    row.appendChild(removeBtn);
+    container.appendChild(row);
+    updateAddButtonState();
+  }
+
+  function updateAddButtonState() {
+    const container = document.getElementById("todoItems");
+    const addBtn = document.getElementById("addItemBtn");
+    const atLimit = container.children.length >= 5;
+    addBtn.style.display = atLimit ? "none" : "block";
+  }
+
+  function removeTodoRow(btn) {
+    const container = document.getElementById("todoItems");
+    if (container.children.length > 1) {
+      btn.parentElement.remove();
+    } else {
+      btn.parentElement.querySelector(".todo-input").value = "";
+    }
+    updateAddButtonState();
+  }
+
+  // Start with three empty rows so the list doesn't look bare
+  window.addEventListener("DOMContentLoaded", () => {
+    addTodoRow(); addTodoRow(); addTodoRow();
+    updateAddButtonState();
+  });
+</script>
+
+<script>
+  // ---------------------------------------------------------------
+  // FILL THESE IN from Supabase Project Settings -> API
+  // ---------------------------------------------------------------
+  const SUPABASE_URL = "https://whavtvvmgkwqteyyvozo.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndoYXZ0dnZtZ2t3cXRleXl2b3pvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5MTQ4MjUsImV4cCI6MjEwNDQ5MDgyNX0.7O8ZJgAzjLhjDLDDoZZLn1CEy1ShZleTkWmlVmRTQPw";
+  // ---------------------------------------------------------------
+  // This is now the ONLY copy of this page — one shared URL, both of
+  // you bookmark the same link. There's no per-person identity baked
+  // into this file anymore.
+  // ---------------------------------------------------------------
+
+  let recipient = "Ts"; // arbitrary starting default — no way to know who's using the page
+
+  function setRecipient(value) {
+    recipient = value;
+    document.getElementById("btnYours").classList.toggle("active", value === "yours");
+    document.getElementById("btnHers").classList.toggle("active", value === "Ts");
+  }
+
+  // Sender is inferred, not fixed, since the page no longer knows who's
+  // using it. Only affects which device shows a "delivered!" confirmation
+  // ping — never affects routing, so an inference being wrong in an edge
+  // case (e.g. sending a to-do list TO her instead of for yourself) just
+  // means the confirmation shows up on the wrong side, not a lost message.
+  //   - Messages: assume you're sending TO the other person (recipient's opposite)
+  //   - To-do items: assume you're sending TO YOURSELF (recipient's own value)
+  function inferSender(recipientValue, contentType) {
+    if (contentType === "todo") {
+      return recipientValue;
+    }
+    return recipientValue === "yours" ? "Ts" : "yours";
+  }
+
+  const MODES = ["message", "todo", "photo"];
+  const MODE_LABELS = { message: "To do", todo: "Photo", photo: "Message" };
+  const MODE_TITLES = { message: "Send a message", todo: "Print a to-do list", photo: "Send a photo" };
+  const SEND_LABELS = { message: "Send", todo: "Print list", photo: "Send photo" };
+
+  function toggleMode() {
+    currentMode = MODES[(MODES.indexOf(currentMode) + 1) % MODES.length];
+    // No SENDER_NAME anymore, so no way to auto-default to "yourself" —
+    // just keep whatever recipient was already selected.
+
+    const btn = document.getElementById("modeSwitch");
+    btn.textContent = MODE_LABELS[currentMode];
+    document.documentElement.classList.toggle("todo-mode", currentMode !== "message");
+    document.getElementById("pageTitle").textContent = MODE_TITLES[currentMode];
+    document.getElementById("messagePanel").style.display = currentMode === "message" ? "block" : "none";
+    document.getElementById("todoPanel").style.display = currentMode === "todo" ? "block" : "none";
+    document.getElementById("photoPanel").style.display = currentMode === "photo" ? "block" : "none";
+    document.getElementById("sendBtn").textContent = SEND_LABELS[currentMode];
+    document.getElementById("status").textContent = "";
+  }
+
+  // Set the initial button states to match the default recipient
+  window.addEventListener("DOMContentLoaded", () => setRecipient(recipient));
+
+  async function sendMessage() {
+    if (currentMode === "todo") {
+      return sendTodoList();
+    }
+    if (currentMode === "photo") {
+      return sendPhoto();
+    }
+
+    const box = document.getElementById("messageBox");
+    const status = document.getElementById("status");
+    const btn = document.getElementById("sendBtn");
+    const text = box.value.trim();
+
+    if (!text) {
+      status.textContent = "Type something first!";
+      return;
+    }
+
+    btn.disabled = true;
+    status.textContent = "Sending...";
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({
+          recipient: recipient,
+          sender: inferSender(recipient, "text"),
+          content: text,
+          content_type: "text",
+          delivered: false
+        })
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        status.textContent = "Sent! 💌";
+        box.value = "";
+        updateCount();
+      } else {
+        status.textContent = "Something went wrong — try again.";
+      }
+    } catch (e) {
+      status.textContent = "Network error — check your connection.";
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function sendTodoList() {
+    const status = document.getElementById("status");
+    const btn = document.getElementById("sendBtn");
+    const inputs = document.querySelectorAll(".todo-input");
+    const items = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+
+    if (items.length === 0) {
+      status.textContent = "Add at least one item first!";
+      return;
+    }
+
+    btn.disabled = true;
+    status.textContent = `Printing ${items.length} item${items.length > 1 ? "s" : ""}...`;
+
+    try {
+      for (const item of items) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify({
+            recipient: recipient,
+            sender: inferSender(recipient, "todo"),
+            content: item,
+            content_type: "todo",
+            delivered: false
+          })
+        });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error("send failed");
+      }
+
+      status.textContent = "Sent to print! 📝";
+      document.getElementById("todoItems").innerHTML = "";
+      addTodoRow(); addTodoRow(); addTodoRow();
+    } catch (e) {
+      status.textContent = "Something went wrong sending the list — try again.";
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Photo mode — resize, grayscale, and dither a photo down to a pure
+  // black-and-white image sized for the printer's exact paper width,
+  // then pack it into the same raster bitmap format the firmware
+  // already prints QR codes with (a small width/height header followed
+  // by 1-bit-per-pixel rows, MSB first). All the heavy processing
+  // happens here in the browser — the ESP32 just decodes and streams
+  // the already-finished bitmap to the printer.
+  // ---------------------------------------------------------------
+  const PRINTER_DOT_WIDTH = 384;  // this printer's full paper width, in dots
+  const MAX_IMAGE_HEIGHT = 400;   // caps data size and how much paper one photo uses
+  let pendingImageBase64 = null;
+
+  // Floyd-Steinberg error-diffusion dithering — converts a grayscale
+  // image to pure black/white while preserving the appearance of
+  // shading, rather than a harsh flat threshold. Mutates `gray` in place.
+  function ditherFloydSteinberg(gray, w, h) {
+    const bits = new Uint8Array(w * h); // 1 = black (prints), 0 = white
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = y * w + x;
+        const oldVal = gray[i];
+        const newVal = oldVal < 128 ? 0 : 255;
+        bits[i] = newVal === 0 ? 1 : 0;
+        const err = oldVal - newVal;
+        if (x + 1 < w) gray[i + 1] += err * 7 / 16;
+        if (y + 1 < h) {
+          if (x - 1 >= 0) gray[i + w - 1] += err * 3 / 16;
+          gray[i + w] += err * 5 / 16;
+          if (x + 1 < w) gray[i + w + 1] += err * 1 / 16;
+        }
+      }
+    }
+    return bits;
+  }
+
+  function uint8ToBase64(bytes) {
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+  }
+
+  function processImageForPrint(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Couldn't read that file"));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("Couldn't load that image"));
+        img.onload = () => {
+          try {
+            let w = PRINTER_DOT_WIDTH;
+            let h = Math.round(img.height * (PRINTER_DOT_WIDTH / img.width));
+            if (h > MAX_IMAGE_HEIGHT) {
+              h = MAX_IMAGE_HEIGHT;
+              w = Math.round(img.width * (MAX_IMAGE_HEIGHT / img.height));
+            }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#fff"; // in case the source has transparency
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+
+            const imageData = ctx.getImageData(0, 0, w, h);
+            const gray = new Float32Array(w * h);
+            for (let i = 0; i < w * h; i++) {
+              const r = imageData.data[i * 4], g = imageData.data[i * 4 + 1], b = imageData.data[i * 4 + 2];
+              gray[i] = 0.299 * r + 0.587 * g + 0.114 * b;
+            }
+
+            const bits = ditherFloydSteinberg(gray, w, h);
+
+            // Pack to the printer's FULL width always (384 dots), centering
+            // a narrower image within it, so the firmware never needs to
+            // know the image's actual width — only the printer's fixed one.
+            const widthBytes = Math.ceil(PRINTER_DOT_WIDTH / 8);
+            const offsetX = Math.floor((PRINTER_DOT_WIDTH - w) / 2);
+            const packed = new Uint8Array(widthBytes * h);
+            for (let y = 0; y < h; y++) {
+              for (let x = 0; x < w; x++) {
+                if (bits[y * w + x]) {
+                  const px = x + offsetX;
+                  const byteIdx = y * widthBytes + Math.floor(px / 8);
+                  const bitIdx = 7 - (px % 8);
+                  packed[byteIdx] |= (1 << bitIdx);
+                }
+              }
+            }
+
+            // 4-byte header (widthBytes, height, both little-endian) the
+            // firmware reads before treating the rest as raw bitmap rows —
+            // same header shape as the printer's own ESC/POS raster command.
+            const header = new Uint8Array(4);
+            header[0] = widthBytes & 0xFF;
+            header[1] = (widthBytes >> 8) & 0xFF;
+            header[2] = h & 0xFF;
+            header[3] = (h >> 8) & 0xFF;
+            const full = new Uint8Array(header.length + packed.length);
+            full.set(header, 0);
+            full.set(packed, header.length);
+
+            // Show the person what will actually print, dithering and all —
+            // not the original photo, since the dithered look is what
+            // shows up on paper.
+            const previewCanvas = document.getElementById("photoPreview");
+            previewCanvas.width = w;
+            previewCanvas.height = h;
+            const pctx = previewCanvas.getContext("2d");
+            const previewData = pctx.createImageData(w, h);
+            for (let i = 0; i < w * h; i++) {
+              const v = bits[i] ? 0 : 255;
+              previewData.data[i * 4] = v;
+              previewData.data[i * 4 + 1] = v;
+              previewData.data[i * 4 + 2] = v;
+              previewData.data[i * 4 + 3] = 255;
+            }
+            pctx.putImageData(previewData, 0, 0);
+            previewCanvas.style.display = "block";
+
+            resolve(uint8ToBase64(full));
+          } catch (err) {
+            reject(err);
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handlePhotoSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const statusEl = document.getElementById("photoStatus");
+    statusEl.textContent = "Processing...";
+    statusEl.style.color = "";
+    try {
+      pendingImageBase64 = await processImageForPrint(file);
+      const kb = Math.round(pendingImageBase64.length / 1024);
+      statusEl.textContent = `Ready to send (~${kb}KB)`;
+    } catch (e) {
+      pendingImageBase64 = null;
+      statusEl.textContent = "Couldn't process that photo — try a different one.";
+      statusEl.style.color = "#d67a2c";
+    }
+  }
+
+  async function sendPhoto() {
+    const status = document.getElementById("status");
+    const btn = document.getElementById("sendBtn");
+
+    if (!pendingImageBase64) {
+      status.textContent = "Choose a photo first!";
+      return;
+    }
+
+    btn.disabled = true;
+    status.textContent = "Sending...";
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // images take longer to upload than text
+
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({
+          recipient: recipient,
+          sender: inferSender(recipient, "text"),
+          content: pendingImageBase64,
+          content_type: "image",
+          delivered: false
+        })
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        status.textContent = "Sent! It'll take a bit longer to print than a text message. 💌";
+        pendingImageBase64 = null;
+        document.getElementById("photoPreview").style.display = "none";
+        document.getElementById("photoStatus").textContent = "";
+        document.getElementById("photoInput").value = "";
+      } else {
+        status.textContent = "Something went wrong — try again.";
+      }
+    } catch (e) {
+      status.textContent = "Network error — check your connection.";
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Online status pills — checks how recently each device last
+  // "checked in" (see the ESP32's updateHeartbeat function). A gap
+  // under 90 seconds (3x the 30-second poll interval, for a little
+  // buffer) counts as online.
+  // ---------------------------------------------------------------
+  const ONLINE_THRESHOLD_SEC = 90;
+
+  function setStatusPill(elId, label, row) {
+    const el = document.getElementById(elId);
+    const dot = el.querySelector(".status-dot");
+    const text = el.querySelector(".status-label");
+
+    if (!row) {
+      dot.className = "status-dot offline";
+      text.textContent = `${label}: never connected`;
+      return;
+    }
+
+    const ageSec = (Date.now() - new Date(row.last_seen).getTime()) / 1000;
+    if (ageSec < ONLINE_THRESHOLD_SEC) {
+      dot.className = "status-dot online";
+      text.textContent = `${label}: online`;
+    } else {
+      dot.className = "status-dot offline";
+      const mins = Math.max(1, Math.round(ageSec / 60));
+      text.textContent = `${label}: last seen ${mins}m ago`;
+    }
+  }
+
+  async function refreshStatus() {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/device_status?select=device_id,last_seen`, {
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      if (!res.ok) return;
+      const rows = await res.json();
+      setStatusPill("statusD", "D", rows.find(r => r.device_id === "yours"));
+      setStatusPill("statusT", "T", rows.find(r => r.device_id === "Ts"));
+    } catch (e) {
+      // Leave pills at their last known state on a network hiccup
+    }
+  }
+
+  refreshStatus();
+  setInterval(refreshStatus, 20000);
+</script>
+
+</body>
+</html>
+
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
