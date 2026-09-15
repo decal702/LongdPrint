@@ -532,7 +532,7 @@
   // the already-finished bitmap to the printer.
   // ---------------------------------------------------------------
   const PRINTER_DOT_WIDTH = 384;  // this printer's full paper width, in dots
-  const MAX_IMAGE_HEIGHT = 550;   // enough for a typical portrait phone photo (3:4) to use the full 384-dot width, not just landscape/square ones
+  const MAX_IMAGE_HEIGHT = 400;   // reverted after testing — this printer has some undocumented limit on raster data size per print command, somewhere between what 400 rows needs and what 550 rows needs. 400 is confirmed working; 550 silently failed with no error, meaning the printer itself rejected it, not a bug in this code.
   let pendingImageBase64 = null;
 
   // Floyd-Steinberg error-diffusion dithering — converts a grayscale
