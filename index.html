@@ -279,7 +279,7 @@
   </div>
 
   <div id="photoPanel" style="display: none;">
-    <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhotoSelected(event)" style="display: none;">
+    <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoSelected(event)" style="display: none;">
     <button type="button" class="add-item-btn" id="photoPickBtn" onclick="document.getElementById('photoInput').click()">+ Choose a photo</button>
     <canvas id="photoPreview" style="display: none; width: 100%; border-radius: 10px; margin-top: 10px; image-rendering: pixelated;"></canvas>
     <div class="char-count" id="photoStatus"></div>
@@ -532,7 +532,7 @@
   // the already-finished bitmap to the printer.
   // ---------------------------------------------------------------
   const PRINTER_DOT_WIDTH = 384;  // this printer's full paper width, in dots
-  const MAX_IMAGE_HEIGHT = 400;   // caps data size and how much paper one photo uses
+  const MAX_IMAGE_HEIGHT = 550;   // enough for a typical portrait phone photo (3:4) to use the full 384-dot width, not just landscape/square ones
   let pendingImageBase64 = null;
 
   // Floyd-Steinberg error-diffusion dithering — converts a grayscale
