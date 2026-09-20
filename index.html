@@ -86,6 +86,150 @@
   .theme-toggle .moon-icon { display: block; }
   html[data-theme="dark"] .theme-toggle .sun-icon { display: block; }
   html[data-theme="dark"] .theme-toggle .moon-icon { display: none; }
+  .settings-toggle {
+    position: absolute;
+    top: 18px;
+    left: 20px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: var(--pill-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+  }
+  .settings-toggle svg { width: 16px; height: 16px; color: var(--text-secondary); }
+  .dnd-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .dnd-modal-overlay.open { display: flex; }
+  .dnd-modal {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 22px 20px;
+    max-width: 340px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .dnd-modal h2 {
+    font-size: 1.1rem;
+    margin: 0 0 4px;
+    text-align: center;
+  }
+  .dnd-modal .dnd-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  .dnd-person-block {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .dnd-person-block h3 {
+    font-size: 0.95rem;
+    margin: 0 0 10px;
+  }
+  .dnd-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .dnd-row label { font-size: 0.85rem; }
+  .dnd-switch {
+    position: relative;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .dnd-switch input { opacity: 0; width: 0; height: 0; }
+  .dnd-switch-track {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .dnd-switch-track::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+  }
+  .dnd-switch input:checked + .dnd-switch-track {
+    background: var(--pink);
+  }
+  .dnd-switch input:checked + .dnd-switch-track::before {
+    transform: translateX(18px);
+  }
+  .dnd-schedule-rows {
+    display: none;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+  }
+  .dnd-schedule-rows.visible { display: block; }
+  .dnd-time-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .dnd-time-row label { font-size: 0.8rem; color: var(--text-secondary); }
+  .dnd-time-row input[type="time"] {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 6px;
+    font-size: 0.85rem;
+    background: var(--pill-bg);
+    color: var(--text);
+  }
+  .dnd-close-btn {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    padding: 10px;
+    border-radius: 12px;
+    border: none;
+    background: var(--pink);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .dnd-status-note {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 4px;
+    min-height: 1em;
+  }
   h1 {
     font-size: 1.3rem;
     margin: 0 0 18px;
@@ -245,6 +389,10 @@
 <body>
 
 <div class="card">
+  <button class="settings-toggle" onclick="openDndModal()" aria-label="Do Not Disturb settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+  </button>
+
   <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
     <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
     <svg class="moon-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 1020.354 15.354z"/></svg>
@@ -775,6 +923,142 @@
 
   refreshStatus();
   setInterval(refreshStatus, 20000);
+</script>
+
+<div class="dnd-modal-overlay" id="dndModalOverlay">
+  <div class="dnd-modal">
+    <h2>Do Not Disturb</h2>
+    <div class="dnd-subtitle">Set individually for each person &mdash; doesn't affect the other</div>
+
+    <div class="dnd-person-block">
+      <h3>D</h3>
+      <div class="dnd-row">
+        <label for="dndManualD">Do Not Disturb now</label>
+        <span class="dnd-switch">
+          <input type="checkbox" id="dndManualD" onchange="saveDnd('yours')">
+          <span class="dnd-switch-track" onclick="document.getElementById('dndManualD').click()"></span>
+        </span>
+      </div>
+      <div class="dnd-row">
+        <label for="dndScheduleD">Automatic schedule</label>
+        <span class="dnd-switch">
+          <input type="checkbox" id="dndScheduleD" onchange="onScheduleToggle('yours')">
+          <span class="dnd-switch-track" onclick="document.getElementById('dndScheduleD').click()"></span>
+        </span>
+      </div>
+      <div class="dnd-schedule-rows" id="dndScheduleRowsD">
+        <div class="dnd-time-row">
+          <label for="dndStartD">From</label>
+          <input type="time" id="dndStartD" onchange="saveDnd('yours')">
+        </div>
+        <div class="dnd-time-row">
+          <label for="dndEndD">Until</label>
+          <input type="time" id="dndEndD" onchange="saveDnd('yours')">
+        </div>
+      </div>
+      <div class="dnd-status-note" id="dndStatusD"></div>
+    </div>
+
+    <div class="dnd-person-block">
+      <h3>T</h3>
+      <div class="dnd-row">
+        <label for="dndManualT">Do Not Disturb now</label>
+        <span class="dnd-switch">
+          <input type="checkbox" id="dndManualT" onchange="saveDnd('Ts')">
+          <span class="dnd-switch-track" onclick="document.getElementById('dndManualT').click()"></span>
+        </span>
+      </div>
+      <div class="dnd-row">
+        <label for="dndScheduleT">Automatic schedule</label>
+        <span class="dnd-switch">
+          <input type="checkbox" id="dndScheduleT" onchange="onScheduleToggle('Ts')">
+          <span class="dnd-switch-track" onclick="document.getElementById('dndScheduleT').click()"></span>
+        </span>
+      </div>
+      <div class="dnd-schedule-rows" id="dndScheduleRowsT">
+        <div class="dnd-time-row">
+          <label for="dndStartT">From</label>
+          <input type="time" id="dndStartT" onchange="saveDnd('Ts')">
+        </div>
+        <div class="dnd-time-row">
+          <label for="dndEndT">Until</label>
+          <input type="time" id="dndEndT" onchange="saveDnd('Ts')">
+        </div>
+      </div>
+      <div class="dnd-status-note" id="dndStatusT"></div>
+    </div>
+
+    <button class="dnd-close-btn" onclick="closeDndModal()">Done</button>
+  </div>
+</div>
+
+<script>
+  const DND_IDS = { yours: { manual: "dndManualD", schedule: "dndScheduleD", rows: "dndScheduleRowsD", start: "dndStartD", end: "dndEndD", status: "dndStatusD" },
+                     Ts:    { manual: "dndManualT", schedule: "dndScheduleT", rows: "dndScheduleRowsT", start: "dndStartT", end: "dndEndT", status: "dndStatusT" } };
+
+  async function openDndModal() {
+    document.getElementById("dndModalOverlay").classList.add("open");
+    await Promise.all([loadDndFor("yours"), loadDndFor("Ts")]);
+  }
+
+  function closeDndModal() {
+    document.getElementById("dndModalOverlay").classList.remove("open");
+  }
+
+  async function loadDndFor(deviceId) {
+    const ids = DND_IDS[deviceId];
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/device_status?device_id=eq.${deviceId}&select=dnd_manual,dnd_schedule_enabled,dnd_start_time,dnd_end_time`, {
+        headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` }
+      });
+      if (!res.ok) return;
+      const rows = await res.json();
+      const row = rows[0] || {};
+      document.getElementById(ids.manual).checked = !!row.dnd_manual;
+      document.getElementById(ids.schedule).checked = !!row.dnd_schedule_enabled;
+      // Postgres "time" comes back as "HH:MM:SS" — <input type="time"> wants "HH:MM"
+      document.getElementById(ids.start).value = (row.dnd_start_time || "22:00:00").slice(0, 5);
+      document.getElementById(ids.end).value = (row.dnd_end_time || "08:00:00").slice(0, 5);
+      document.getElementById(ids.rows).classList.toggle("visible", !!row.dnd_schedule_enabled);
+    } catch (e) {
+      document.getElementById(ids.status).textContent = "Couldn't load settings.";
+    }
+  }
+
+  function onScheduleToggle(deviceId) {
+    const ids = DND_IDS[deviceId];
+    document.getElementById(ids.rows).classList.toggle("visible", document.getElementById(ids.schedule).checked);
+    saveDnd(deviceId);
+  }
+
+  async function saveDnd(deviceId) {
+    const ids = DND_IDS[deviceId];
+    const statusEl = document.getElementById(ids.status);
+    const body = {
+      device_id: deviceId,
+      dnd_manual: document.getElementById(ids.manual).checked,
+      dnd_schedule_enabled: document.getElementById(ids.schedule).checked,
+      dnd_start_time: document.getElementById(ids.start).value || "22:00",
+      dnd_end_time: document.getElementById(ids.end).value || "08:00"
+    };
+    statusEl.textContent = "Saving...";
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/device_status?on_conflict=device_id`, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates,return=minimal"
+        },
+        body: JSON.stringify(body)
+      });
+      statusEl.textContent = res.ok ? "Saved" : "Couldn't save — try again.";
+      if (res.ok) setTimeout(() => { if (statusEl.textContent === "Saved") statusEl.textContent = ""; }, 2000);
+    } catch (e) {
+      statusEl.textContent = "Network error — try again.";
+    }
+  }
 </script>
 
 </body>
