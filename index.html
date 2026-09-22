@@ -680,7 +680,7 @@
   // the already-finished bitmap to the printer.
   // ---------------------------------------------------------------
   const PRINTER_DOT_WIDTH = 384;  // this printer's full paper width, in dots
-  const MAX_IMAGE_HEIGHT = 400;   // reverted again — the retry at 550 (after fixing the voltage issue) failed the same way: silent, no error logged, nothing printed. That specific pattern now points to a genuine, separate data-size limit on this printer, independent of the voltage problem. 400 is the confirmed-safe value.
+  const MAX_IMAGE_HEIGHT = 350;   // lowered from 400 — every portrait-oriented photo lands EXACTLY on this ceiling (since scaling to full width always overshoots it for anything taller than wide), while landscape photos rarely get close. Only portraits were failing to print, which fits a printer that's marginal right at 400 rather than fully safe there — this builds in real margin below it as a test.
   let pendingImageBase64 = null;
 
   // Floyd-Steinberg error-diffusion dithering — converts a grayscale
