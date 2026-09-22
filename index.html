@@ -460,7 +460,7 @@
 
   function addTodoRow(value) {
     const container = document.getElementById("todoItems");
-    if (container.children.length >= 5) return; // matches the firmware's per-cycle batch limit
+    if (container.children.length >= 15) return; // matches the firmware's per-cycle batch limit
     const row = document.createElement("div");
     row.className = "todo-row";
     const input = document.createElement("input");
@@ -484,7 +484,7 @@
   function updateAddButtonState() {
     const container = document.getElementById("todoItems");
     const addBtn = document.getElementById("addItemBtn");
-    const atLimit = container.children.length >= 5;
+    const atLimit = container.children.length >= 15;
     addBtn.style.display = atLimit ? "none" : "block";
   }
 
@@ -680,7 +680,7 @@
   // the already-finished bitmap to the printer.
   // ---------------------------------------------------------------
   const PRINTER_DOT_WIDTH = 384;  // this printer's full paper width, in dots
-  const MAX_IMAGE_HEIGHT = 400;   // reverted after testing — this printer has some undocumented limit on raster data size per print command, somewhere between what 400 rows needs and what 550 rows needs. 400 is confirmed working; 550 silently failed with no error, meaning the printer itself rejected it, not a bug in this code.
+  const MAX_IMAGE_HEIGHT = 550;   // retrying this after reverting it once before — at the time, 550 failed silently and we assumed the printer had a hard data-size limit, but that failure happened BEFORE the actual root cause (a voltage supply problem, since fixed in hardware) was identified. Worth testing again now that the real cause is resolved; revert to 400 again if it still fails.
   let pendingImageBase64 = null;
 
   // Floyd-Steinberg error-diffusion dithering — converts a grayscale
