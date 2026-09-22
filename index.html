@@ -680,7 +680,7 @@
   // the already-finished bitmap to the printer.
   // ---------------------------------------------------------------
   const PRINTER_DOT_WIDTH = 384;  // this printer's full paper width, in dots
-  const MAX_IMAGE_HEIGHT = 550;   // retrying this after reverting it once before — at the time, 550 failed silently and we assumed the printer had a hard data-size limit, but that failure happened BEFORE the actual root cause (a voltage supply problem, since fixed in hardware) was identified. Worth testing again now that the real cause is resolved; revert to 400 again if it still fails.
+  const MAX_IMAGE_HEIGHT = 400;   // reverted again — the retry at 550 (after fixing the voltage issue) failed the same way: silent, no error logged, nothing printed. That specific pattern now points to a genuine, separate data-size limit on this printer, independent of the voltage problem. 400 is the confirmed-safe value.
   let pendingImageBase64 = null;
 
   // Floyd-Steinberg error-diffusion dithering — converts a grayscale
