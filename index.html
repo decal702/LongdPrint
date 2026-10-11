@@ -921,8 +921,15 @@
     }
   }
 
+  // Poll every 60s, and only while the tab is visible (saves Supabase
+  // requests/egress). Refreshes immediately when the tab becomes visible again.
   refreshStatus();
-  setInterval(refreshStatus, 20000);
+  setInterval(() => {
+    if (document.visibilityState === "visible") refreshStatus();
+  }, 60000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refreshStatus();
+  });
 </script>
 
 <div class="dnd-modal-overlay" id="dndModalOverlay">
